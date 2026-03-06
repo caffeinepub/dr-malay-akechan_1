@@ -1,17 +1,13 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAdminActor } from "@/hooks/useAdminActor";
 import {
-  AlertCircle,
   AlignLeft,
   Building2,
   FileText,
   LayoutDashboard,
   Loader2,
   LogOut,
-  RefreshCw,
   Share2,
   Stethoscope,
 } from "lucide-react";
@@ -39,7 +35,7 @@ const tabItems = [
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState("header");
-  const { actor, isFetching, isError, error } = useAdminActor();
+  const { isFetching } = useAdminActor();
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden">
@@ -55,13 +51,22 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           className="flex items-center justify-between mb-8 flex-wrap gap-4"
           data-ocid="admin.dashboard.panel"
         >
-          <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-bold text-gradient-cyan">
-              Admin Dashboard
-            </h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Manage all website content from here
-            </p>
+          <div className="flex items-center gap-3">
+            <div>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-gradient-cyan">
+                Admin Dashboard
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage all website content from here
+              </p>
+            </div>
+            {isFetching && (
+              <Loader2
+                size={16}
+                className="text-cyan animate-spin flex-shrink-0 mt-1"
+                data-ocid="admin.actor.loading_state"
+              />
+            )}
           </div>
           <Button
             variant="outline"
@@ -75,71 +80,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
           </Button>
         </motion.div>
 
-        {/* Actor initialization loading state */}
-        {isFetching && !actor && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-3 p-4 rounded-xl bg-muted/30 border border-border/40 mb-6"
-            data-ocid="admin.actor.loading_state"
-          >
-            <Loader2
-              size={16}
-              className="text-cyan animate-spin flex-shrink-0"
-            />
-            <div>
-              <p className="text-sm font-medium">
-                Authenticating admin session…
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Connecting to the backend with your admin identity
-              </p>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Actor initialization error state */}
-        {isError && !isFetching && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6"
-            data-ocid="admin.actor.error_state"
-          >
-            <Alert className="border-destructive/40 bg-destructive/5">
-              <AlertCircle size={16} className="text-destructive" />
-              <AlertTitle className="text-destructive font-semibold">
-                Admin authentication failed
-              </AlertTitle>
-              <AlertDescription className="text-sm text-muted-foreground mt-1">
-                {error instanceof Error
-                  ? error.message
-                  : "Could not connect to the backend as admin. Please reload the page."}
-                <div className="mt-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
-                    onClick={() => window.location.reload()}
-                  >
-                    <RefreshCw size={13} />
-                    Reload page
-                  </Button>
-                </div>
-              </AlertDescription>
-            </Alert>
-          </motion.div>
-        )}
-
-        {/* Skeleton while loading */}
-        {isFetching && !actor && (
-          <div className="space-y-3 mb-6">
-            <Skeleton className="h-10 w-full rounded-xl" />
-            <Skeleton className="h-64 w-full rounded-xl" />
-          </div>
-        )}
-
-        {/* Tabs */}
+        {/* Tabs — always visible, no auth blocking */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="flex flex-wrap h-auto gap-1 p-1 bg-muted/50 border border-border/50 rounded-xl mb-8">
             {tabItems.map((tab) => (

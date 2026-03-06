@@ -4,50 +4,29 @@ import {
 } from "@/utils/adminIdentity";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AdminDashboard from "./AdminDashboard";
 import AdminLogin from "./AdminLogin";
 
 export default function AdminPage() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
-    return localStorage.getItem("adminLoggedIn") === "true";
-  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(
+    () => localStorage.getItem("adminLoggedIn") === "true",
+  );
   const queryClient = useQueryClient();
 
-  // Listen for storage events (logout from other tabs)
-  useEffect(() => {
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === "adminLoggedIn") {
-        setIsLoggedIn(e.newValue === "true");
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
-  }, []);
-
-  // On mount, restore the admin identity if the session is still active
-  useEffect(() => {
-    if (localStorage.getItem("adminLoggedIn") === "true") {
-      getOrCreateAdminIdentity();
-    }
-  }, []);
-
-  const handleLogin = async () => {
+  const handleLogin = () => {
     localStorage.setItem("adminLoggedIn", "true");
-    // Ensure the Ed25519 identity is created before the actor query runs
+    // Pre-create the Ed25519 identity so the actor query can use it immediately
     getOrCreateAdminIdentity();
     setIsLoggedIn(true);
-    // Invalidate admin actor so it reinitializes with the admin identity
-    await queryClient.invalidateQueries({ queryKey: ["adminActor"] });
-    await queryClient.refetchQueries({ queryKey: ["adminActor"] });
+    queryClient.invalidateQueries({ queryKey: ["adminActor"] });
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
     clearAdminIdentity();
     setIsLoggedIn(false);
-    // Remove cached admin actor
-    await queryClient.invalidateQueries({ queryKey: ["adminActor"] });
+    queryClient.removeQueries({ queryKey: ["adminActor"] });
   };
 
   return (

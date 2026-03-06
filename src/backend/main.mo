@@ -1,12 +1,13 @@
 import Map "mo:core/Map";
 import Nat "mo:core/Nat";
+import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Migration "migration";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-(with migration = Migration.run)
+
 actor {
   // State Declarations
   let clinics = Map.empty<Nat, Clinic>();
@@ -272,3 +273,4 @@ actor {
   // TODO for future work:
   // - Implement additional features such as file upload support (for PDFs/images) if needed.
 };
+
