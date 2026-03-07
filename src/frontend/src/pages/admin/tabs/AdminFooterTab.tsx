@@ -55,7 +55,7 @@ export default function AdminFooterTab() {
       transition={{ duration: 0.3 }}
       data-ocid="admin.footer.panel"
     >
-      <Card className="glass border border-border/50 max-w-2xl">
+      <Card className="glass border border-border/50 max-w-2xl w-full">
         <div className="h-0.5 bg-gradient-to-r from-amber to-cyan rounded-t-lg" />
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg font-display">

@@ -1,31 +1,36 @@
 # Dr. Malay Akechan
 
 ## Current State
-Full doctor website with public pages (Home, About, Clinics, Services, Social, Footer) and an admin panel at `/admin`. The admin panel uses a complex Ed25519 identity + Caffeine platform token (`caffeineAdminToken`) approach to authenticate with the backend. This breaks because the Caffeine token is unavailable after navigation, resulting in "Admin authentication failed" errors on every content save attempt.
-
-The backend uses an `AccessControl` mixin with principal-based role assignment. Admin functions are guarded by `adminOnly(caller)` which checks the caller's principal role — an approach that requires Internet Identity or Caffeine's token-based registration.
+- Full-stack doctor website with public pages (Home, About, Clinics, Services, Social, Footer) and an admin panel at `/admin`
+- Admin login uses simple username/password check (`malay` / `duke46`)
+- After login, `useAdminActor` creates an Ed25519 identity and calls `_initializeAccessControlWithSecret` with a Caffeine platform token to register as admin
+- All admin mutations (setHeader, setAbout, addClinic, etc.) go through `useAdminActor` which returns the authenticated actor
+- Content saving is failing — actor is returned but mutations are rejected by backend as "Unauthorized"
+- Image fields in Header (heroText imageUrl) and About (photoUrl) use plain URL text inputs only
+- Admin dashboard tabs are partially hidden on small screens (labels truncated to 3 chars)
 
 ## Requested Changes (Diff)
 
 ### Add
-- Backend: A hardcoded `ADMIN_SECRET` constant (`"malay:duke46"`) used to gate all admin mutations. Each admin function takes `secret: Text` as its first argument and calls `requireAdmin(secret)` which traps if the secret doesn't match.
-- Frontend: A simple `ADMIN_SECRET` constant (`"malay:duke46"`) stored in the frontend. All admin mutation hooks pass this secret as the first argument to every backend call.
+- File upload buttons in AdminHeaderTab for the hero/background image field
+- File upload buttons in AdminAboutTab for the doctor photo field
+- Remove/clear image button next to each image field in Header and About tabs
+- Image preview after upload in both tabs
+- Base64 data URL encoding for uploaded images (stored as imageUrl / photoUrl in backend)
+- Mobile-responsive layout for AdminDashboard: full tab labels on mobile with scrollable tab list, stack layout for header row
 
 ### Modify
-- Backend `main.mo`: Remove all `AccessControl`/`MixinAuthorization` imports and usage. Replace `adminOnly(caller)` guards with `requireAdmin(secret)` pattern. Add `secret: Text` as first param to all admin mutation functions (`setHeader`, `setAbout`, `setFooter`, `addClinic`, `updateClinic`, `deleteClinic`, `addService`, `updateService`, `deleteService`, `addSocialLink`, `updateSocialLink`, `deleteSocialLink`). Remove `UserProfile`/`userProfiles` since they're unused by the frontend. Remove `saveCallerUserProfile`, `getUserProfile`, `getCallerUserProfile` functions.
-- Frontend `useAdminActor.ts`: Completely rewrite — no more Ed25519 identity, no more `_initializeAccessControlWithSecret`, no more admin token lookup. The hook just returns the standard anonymous actor from `useActor` (read-only actor) plus the `ADMIN_SECRET` constant.
-- Frontend `useAdminQueries.ts`: All mutation hooks updated to pass `ADMIN_SECRET` as the first argument to each backend call.
-- Frontend `AdminDashboard.tsx`: Remove the "Authenticating admin session..." loading state and the actor error banner — they no longer apply. The actor is always available (anonymous).
-- Frontend `AdminPage.tsx`: Simplify — remove `getOrCreateAdminIdentity`, `clearAdminIdentity`, QueryClient invalidation for adminActor. Login just sets `localStorage.adminLoggedIn = "true"`, logout removes it.
-- Frontend `adminIdentity.ts`: Can be deleted or emptied — no longer needed.
+- AdminHeaderTab: replace URL-only input with upload + URL input combo; add clear/remove image button
+- AdminAboutTab: replace URL-only input with upload + URL input combo; add clear/remove image button
+- AdminDashboard: make tab list horizontally scrollable on mobile, show full tab labels at all sizes, improve header row stacking on small screens
+- Fix admin content saving: ensure `useAdminActor` properly waits for actor initialization before mutations are fired; add retry/re-init logic if actor is ready but save fails with Unauthorized
 
 ### Remove
-- Backend: `AccessControl` and `MixinAuthorization` usage, `UserProfile` type, `userProfiles` map, `saveCallerUserProfile`, `getUserProfile`, `getCallerUserProfile`, `assignCallerUserRole`, `getCallerUserRole`, `isCallerAdmin` functions.
-- Frontend: All Ed25519 identity creation/storage logic, all Caffeine admin token lookups, all actor initialization error states in the dashboard.
+- Nothing removed
 
 ## Implementation Plan
-1. Regenerate backend with simple secret-based auth — each admin function takes `secret: Text` first, checks `secret == ADMIN_SECRET`, traps if not. No AccessControl mixin.
-2. Rewrite `useAdminActor.ts` to export just the regular anonymous actor + `ADMIN_SECRET`.
-3. Rewrite `useAdminQueries.ts` — pass `ADMIN_SECRET` as first arg to all mutations.
-4. Simplify `AdminPage.tsx` and `AdminDashboard.tsx` — remove all identity/token complexity.
-5. Validate and deploy.
+1. **AdminHeaderTab** — add a hidden file input triggered by an "Upload Image" button; on file select, convert to base64 data URL and set as `imageUrl`; show image preview; add "Remove" button that clears `imageUrl`; keep URL text input as fallback
+2. **AdminAboutTab** — same image upload/remove pattern for `photoUrl` (doctor photo)
+3. **AdminDashboard** — make TabsList use `overflow-x-auto flex-nowrap` on mobile; remove truncated label logic (always show full label); improve header row with `flex-col sm:flex-row` 
+4. **useAdminActor** — improve initialization: after getting the actor, verify admin status and if not admin, attempt re-initialization; log clearer errors; ensure mutations wait for actor to be fully ready
+5. **useAdminQueries** — wrap each mutation with better error handling; if actor is present but save fails, invalidate adminActor cache and retry once

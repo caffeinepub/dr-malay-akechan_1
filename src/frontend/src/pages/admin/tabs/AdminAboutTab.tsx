@@ -11,9 +11,17 @@ import {
   LayoutDashboard,
   Loader2,
   Save,
+  Upload,
+  X,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { type FormEvent, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { toast } from "sonner";
 
 export default function AdminAboutTab() {
@@ -25,6 +33,7 @@ export default function AdminAboutTab() {
   const [qualifications, setQualifications] = useState("");
   const [experience, setExperience] = useState("");
   const [saved, setSaved] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (about) {
@@ -34,6 +43,26 @@ export default function AdminAboutTab() {
       setExperience(about.experience ?? "");
     }
   }, [about]);
+
+  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 1 * 1024 * 1024) {
+      toast.warning(
+        "Image is large and may slow down the site. Consider compressing it.",
+      );
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPhotoUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Reset so same file can be re-selected if needed
+    e.target.value = "";
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -53,7 +82,7 @@ export default function AdminAboutTab() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      <Card className="glass border border-border/50 max-w-2xl">
+      <Card className="glass border border-border/50 max-w-2xl w-full">
         <div className="h-0.5 bg-gradient-to-r from-violet to-emerald rounded-t-lg" />
         <CardHeader className="pb-4">
           <CardTitle className="flex items-center gap-2 text-lg font-display">
@@ -63,20 +92,53 @@ export default function AdminAboutTab() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
+            {/* Doctor Photo upload section */}
+            <div className="space-y-3">
               <Label className="text-sm font-medium flex items-center gap-2">
                 <ImageIcon size={14} className="text-muted-foreground" />
-                Doctor Photo URL
+                Doctor Photo
               </Label>
-              <Input
-                value={photoUrl}
-                onChange={(e) => setPhotoUrl(e.target.value)}
-                placeholder="https://example.com/doctor-photo.jpg"
-                type="url"
-                className="bg-background/50 border-border/50 focus:border-violet/50 text-sm"
-              />
+
+              {/* Upload button */}
+              <div className="flex flex-wrap gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  data-ocid="admin.about.upload_button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="gap-2 border-violet/30 text-violet hover:bg-violet/10 hover:border-violet/50"
+                >
+                  <Upload size={14} />
+                  Upload Photo
+                </Button>
+              </div>
+
+              {/* URL fallback */}
+              <div className="space-y-1.5">
+                <span className="text-xs text-muted-foreground">
+                  or paste photo URL:
+                </span>
+                <Input
+                  value={photoUrl.startsWith("data:") ? "" : photoUrl}
+                  onChange={(e) => setPhotoUrl(e.target.value)}
+                  placeholder="https://example.com/doctor-photo.jpg"
+                  type="url"
+                  className="bg-background/50 border-border/50 focus:border-violet/50 text-sm"
+                  disabled={photoUrl.startsWith("data:")}
+                />
+              </div>
+
+              {/* Photo preview with remove button */}
               {photoUrl && (
-                <div className="w-24 h-24 rounded-xl overflow-hidden border border-border/50">
+                <div className="relative w-28 h-28 rounded-2xl overflow-hidden border border-border/50 group">
                   <img
                     src={photoUrl}
                     alt="Doctor preview"
@@ -85,6 +147,16 @@ export default function AdminAboutTab() {
                       (e.target as HTMLImageElement).style.display = "none";
                     }}
                   />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors" />
+                  <button
+                    type="button"
+                    data-ocid="admin.about.delete_button"
+                    onClick={() => setPhotoUrl("")}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 hover:bg-destructive text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200"
+                    title="Remove photo"
+                  >
+                    <X size={12} />
+                  </button>
                 </div>
               )}
             </div>

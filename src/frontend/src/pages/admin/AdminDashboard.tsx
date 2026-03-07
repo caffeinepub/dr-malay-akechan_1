@@ -42,13 +42,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       {/* Background */}
       <div className="absolute inset-0 bg-mesh pointer-events-none" />
 
-      <div className="relative container mx-auto px-4 py-8">
-        {/* Dashboard header */}
+      <div className="relative container mx-auto px-3 sm:px-4 py-5 sm:py-8">
+        {/* Dashboard header — stacks vertically on mobile */}
         <motion.div
           initial={{ opacity: 0, y: -16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center justify-between mb-8 flex-wrap gap-4"
+          className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-3"
           data-ocid="admin.dashboard.panel"
         >
           <div className="flex items-center gap-3">
@@ -73,26 +73,25 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
             size="sm"
             onClick={onLogout}
             data-ocid="admin.logout.button"
-            className="border-destructive/30 text-destructive hover:bg-destructive/10 gap-2"
+            className="border-destructive/30 text-destructive hover:bg-destructive/10 gap-2 w-full sm:w-auto"
           >
             <LogOut size={14} />
             Logout
           </Button>
         </motion.div>
 
-        {/* Tabs — always visible, no auth blocking */}
+        {/* Tabs — horizontal scroll on mobile */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="flex flex-wrap h-auto gap-1 p-1 bg-muted/50 border border-border/50 rounded-xl mb-8">
+          <TabsList className="flex overflow-x-auto gap-1 p-1 bg-muted/50 border border-border/50 rounded-xl mb-8 h-auto scrollbar-none">
             {tabItems.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
                 data-ocid="admin.tab"
-                className="flex items-center gap-2 text-xs sm:text-sm px-3 py-2 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan/20 data-[state=active]:to-violet/20 data-[state=active]:border data-[state=active]:border-cyan/30 data-[state=active]:text-foreground transition-all"
+                className="flex-shrink-0 flex items-center gap-2 text-xs sm:text-sm px-3 py-2 rounded-lg whitespace-nowrap data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan/20 data-[state=active]:to-violet/20 data-[state=active]:border data-[state=active]:border-cyan/30 data-[state=active]:text-foreground transition-all"
               >
-                <tab.icon size={14} />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.label.slice(0, 3)}</span>
+                <tab.icon size={14} className="flex-shrink-0" />
+                <span>{tab.label}</span>
               </TabsTrigger>
             ))}
           </TabsList>

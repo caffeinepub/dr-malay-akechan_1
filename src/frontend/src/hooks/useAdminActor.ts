@@ -5,21 +5,22 @@
  * Authentication flow:
  * 1. Get or create a stable Ed25519 identity (stored in sessionStorage)
  * 2. Create an actor with that identity
- * 3. Try _initializeAccessControlWithSecret with the Caffeine platform token
- *    (from URL or sessionStorage). This registers the identity as admin.
- * 4. If token not available, return actor anyway — saves will fail gracefully
- *    but we won't block the UI with an auth error banner.
+ * 3. ALWAYS try _initializeAccessControlWithSecret if token is available
+ * 4. Verify with isCallerAdmin() — if true, store adminIsRegistered flag
+ * 5. If already registered (sessionStorage flag), skip re-registration
+ * 6. Return actor regardless — saves fail gracefully with error toasts
  *
  * NOTE: _initializeAccessControlWithSecret is in the backend but not in the
  * generated backend.d.ts, so we access it via type casting.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { createActorWithConfig } from "../config";
 import { getOrCreateAdminIdentity } from "../utils/adminIdentity";
 import { getPersistedUrlParameter } from "../utils/urlParams";
 
 const ADMIN_ACTOR_QUERY_KEY = "adminActor";
+const ADMIN_REGISTERED_KEY = "adminIsRegistered";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyActor = any;
@@ -43,6 +44,15 @@ export function useAdminActor() {
         agentOptions: { identity: adminIdentity },
       });
 
+      // Check if already registered in this session to avoid redundant calls
+      const alreadyRegistered =
+        sessionStorage.getItem(ADMIN_REGISTERED_KEY) === "true";
+
+      if (alreadyRegistered) {
+        // Skip re-registration, return actor directly
+        return actor;
+      }
+
       // Try to get the Caffeine platform token from URL or sessionStorage.
       // getPersistedUrlParameter checks URL query/hash first, then sessionStorage,
       // and stores the value in sessionStorage when found in the URL.
@@ -65,11 +75,27 @@ export function useAdminActor() {
 
         try {
           const isAdmin = await actor.isCallerAdmin();
-          if (isAdmin) return actor;
+          if (isAdmin) {
+            // Store flag so future calls skip re-registration
+            sessionStorage.setItem(ADMIN_REGISTERED_KEY, "true");
+            return actor;
+          }
         } catch (err) {
           // isCallerAdmin can throw if the user was never registered in the
           // access control map (Runtime.trap in Motoko). Treat as not-admin.
           console.warn("[useAdminActor] isCallerAdmin check failed:", err);
+        }
+      } else {
+        // No token available — try isCallerAdmin anyway in case already registered
+        // from a previous session with the same identity
+        try {
+          const isAdmin = await actor.isCallerAdmin();
+          if (isAdmin) {
+            sessionStorage.setItem(ADMIN_REGISTERED_KEY, "true");
+            return actor;
+          }
+        } catch {
+          // Not registered — expected when token is missing
         }
       }
 
@@ -77,10 +103,19 @@ export function useAdminActor() {
       // error. If saves fail, they'll show their own error toasts.
       return actor;
     },
-    staleTime: Number.POSITIVE_INFINITY,
+    // staleTime: 0 ensures re-runs on each login (not POSITIVE_INFINITY)
+    staleTime: 0,
     enabled: adminLoggedIn,
     retry: 2,
   });
+
+  // reinitialize: clears registration flag and re-runs the query
+  const reinitialize = useCallback(() => {
+    sessionStorage.removeItem(ADMIN_REGISTERED_KEY);
+    queryClient.invalidateQueries({
+      queryKey: [ADMIN_ACTOR_QUERY_KEY],
+    });
+  }, [queryClient]);
 
   // When the actor is ready, refresh dependent data queries once
   useEffect(() => {
@@ -97,5 +132,6 @@ export function useAdminActor() {
     isError: actorQuery.isError,
     isReady: !!actorQuery.data && !actorQuery.isFetching,
     error: actorQuery.error,
+    reinitialize,
   };
 }

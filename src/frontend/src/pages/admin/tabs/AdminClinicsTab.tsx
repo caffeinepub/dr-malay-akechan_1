@@ -155,7 +155,7 @@ export default function AdminClinicsTab() {
       data-ocid="admin.clinics.panel"
     >
       {/* Header row */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="font-display text-xl font-bold">Manage Clinics</h2>
           <p className="text-sm text-muted-foreground">
@@ -175,7 +175,10 @@ export default function AdminClinicsTab() {
 
       {/* Clinics list */}
       {clinics.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
+        <div
+          className="text-center py-16 text-muted-foreground"
+          data-ocid="admin.clinics.empty_state"
+        >
           <Building2 size={32} className="mx-auto mb-3 opacity-30" />
           <p className="text-sm">
             No clinics added yet. Click "Add Clinic" to get started.
@@ -254,7 +257,7 @@ export default function AdminClinicsTab() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
                         {/* Toggle visibility */}
                         <Button
                           variant="ghost"
@@ -299,7 +302,7 @@ export default function AdminClinicsTab() {
                               <Trash2 size={14} className="text-destructive" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
                             <AlertDialogHeader>
                               <AlertDialogTitle>
                                 Delete Clinic?
@@ -336,7 +339,7 @@ export default function AdminClinicsTab() {
       {/* Add / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent
-          className="glass border border-border/50 max-w-lg"
+          className="glass border border-border/50 max-w-[95vw] sm:max-w-lg"
           data-ocid="admin.clinic.dialog"
         >
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald to-cyan rounded-t-lg" />
@@ -348,9 +351,9 @@ export default function AdminClinicsTab() {
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Fields grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 space-y-1.5">
+            {/* Fields grid — single column on mobile, two on sm+ */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
                 <Label className="text-xs font-medium">Clinic Name *</Label>
                 <Input
                   value={form.name}
@@ -362,7 +365,7 @@ export default function AdminClinicsTab() {
                   className="text-sm bg-background/50"
                 />
               </div>
-              <div className="col-span-2 space-y-1.5">
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
                 <Label className="text-xs font-medium flex items-center gap-1.5">
                   <MapPin size={11} className="text-violet" /> Address
                 </Label>
@@ -402,7 +405,7 @@ export default function AdminClinicsTab() {
                   className="text-sm bg-background/50"
                 />
               </div>
-              <div className="col-span-2 space-y-1.5">
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
                 <Label className="text-xs font-medium flex items-center gap-1.5">
                   <LinkIcon size={11} className="text-emerald" /> Google Maps
                   URL
@@ -417,7 +420,7 @@ export default function AdminClinicsTab() {
                   className="text-sm bg-background/50"
                 />
               </div>
-              <div className="col-span-2 space-y-1.5">
+              <div className="col-span-1 sm:col-span-2 space-y-1.5">
                 <Label className="text-xs font-medium flex items-center gap-1.5">
                   <Calendar size={11} className="text-violet" /> Booking URL
                 </Label>
@@ -433,12 +436,13 @@ export default function AdminClinicsTab() {
               </div>
             </div>
 
-            <DialogFooter className="gap-2 pt-2">
+            <DialogFooter className="flex-wrap gap-2 pt-2">
               <DialogClose asChild>
                 <Button
                   variant="outline"
                   type="button"
                   size="sm"
+                  data-ocid="admin.clinic.cancel_button"
                   className="gap-1.5"
                 >
                   <X size={14} />

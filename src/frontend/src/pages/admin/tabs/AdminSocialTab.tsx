@@ -114,7 +114,7 @@ export default function AdminSocialTab() {
       data-ocid="admin.social.panel"
     >
       {/* Header row */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="font-display text-xl font-bold">
             Manage Social Links
@@ -136,7 +136,10 @@ export default function AdminSocialTab() {
 
       {/* Links list */}
       {socialLinks.length === 0 ? (
-        <div className="text-center py-16 text-muted-foreground">
+        <div
+          className="text-center py-16 text-muted-foreground"
+          data-ocid="admin.social.empty_state"
+        >
           <Share2 size={32} className="mx-auto mb-3 opacity-30" />
           <p className="text-sm">No social links added yet.</p>
         </div>
@@ -176,11 +179,12 @@ export default function AdminSocialTab() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => openEditDialog(link)}
+                        data-ocid={`admin.social.edit_button.${idx + 1}`}
                         className="w-8 h-8 hover:bg-violet/10"
                       >
                         <Edit3 size={14} className="text-violet" />
@@ -197,7 +201,7 @@ export default function AdminSocialTab() {
                             <Trash2 size={14} className="text-destructive" />
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="max-w-[95vw] sm:max-w-md">
                           <AlertDialogHeader>
                             <AlertDialogTitle>
                               Delete Social Link?
@@ -229,7 +233,7 @@ export default function AdminSocialTab() {
 
       {/* Add / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="glass border border-border/50 max-w-md">
+        <DialogContent className="glass border border-border/50 max-w-[95vw] sm:max-w-md">
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-violet to-emerald rounded-t-lg" />
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
@@ -281,7 +285,7 @@ export default function AdminSocialTab() {
               />
             </div>
 
-            <DialogFooter className="gap-2 pt-2">
+            <DialogFooter className="flex-wrap gap-2 pt-2">
               <DialogClose asChild>
                 <Button
                   variant="outline"
