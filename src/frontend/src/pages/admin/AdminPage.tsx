@@ -1,7 +1,3 @@
-import {
-  clearAdminIdentity,
-  getOrCreateAdminIdentity,
-} from "@/utils/adminIdentity";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
@@ -16,15 +12,12 @@ export default function AdminPage() {
 
   const handleLogin = () => {
     localStorage.setItem("adminLoggedIn", "true");
-    // Pre-create the Ed25519 identity so the actor query can use it immediately
-    getOrCreateAdminIdentity();
     setIsLoggedIn(true);
-    queryClient.invalidateQueries({ queryKey: ["adminActor"] });
   };
 
   const handleLogout = () => {
     localStorage.removeItem("adminLoggedIn");
-    clearAdminIdentity();
+    sessionStorage.removeItem("adminPassword");
     setIsLoggedIn(false);
     queryClient.removeQueries({ queryKey: ["adminActor"] });
   };

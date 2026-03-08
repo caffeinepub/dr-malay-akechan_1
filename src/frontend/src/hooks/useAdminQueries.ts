@@ -1,56 +1,20 @@
 /**
- * Admin-specific mutations that use useAdminActor instead of useActor.
- * These are identical to the mutations in useQueries.ts except they rely on
- * the Ed25519-authenticated actor that can pass the backend's admin check.
- *
- * Each mutation catches Unauthorized errors and triggers a reinitialize()
- * so the admin session can recover automatically.
+ * Admin-specific mutations that pass adminPassword as the FIRST argument
+ * to every backend function. The backend validates the password server-side.
  */
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
 import type { AboutContent, FooterContent, HeaderContent } from "../backend.d";
 import { useAdminActor } from "./useAdminActor";
-
-/** Returns true if the error looks like an authorization failure */
-function isUnauthorizedError(err: unknown): boolean {
-  if (!err) return false;
-  const msg = String(err).toLowerCase();
-  return (
-    msg.includes("unauthorized") ||
-    msg.includes("not admin") ||
-    msg.includes("access denied") ||
-    msg.includes("caller is not")
-  );
-}
-
-/** Handles a mutation error — shows specific toast for auth errors */
-function handleMutationError(
-  err: unknown,
-  reinitialize: () => void,
-  label: string,
-) {
-  if (isUnauthorizedError(err)) {
-    toast.error("Save failed: admin session expired. Please reload the page.");
-    reinitialize();
-  } else {
-    toast.error(`Failed to save ${label}`);
-  }
-  throw err;
-}
 
 // ── Header ─────────────────────────────────────────────
 
 export function useAdminSetHeader() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (header: HeaderContent) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.setHeader(header);
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "header");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.setHeader(adminPassword, header);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["header"] }),
   });
@@ -59,16 +23,12 @@ export function useAdminSetHeader() {
 // ── About ──────────────────────────────────────────────
 
 export function useAdminSetAbout() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (about: AboutContent) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.setAbout(about);
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "about section");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.setAbout(adminPassword, about);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["about"] }),
   });
@@ -77,16 +37,12 @@ export function useAdminSetAbout() {
 // ── Footer ─────────────────────────────────────────────
 
 export function useAdminSetFooter() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (footer: FooterContent) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.setFooter(footer);
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "footer");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.setFooter(adminPassword, footer);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["footer"] }),
   });
@@ -95,7 +51,7 @@ export function useAdminSetFooter() {
 // ── Clinics ────────────────────────────────────────────
 
 export function useAdminAddClinic() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -106,19 +62,16 @@ export function useAdminAddClinic() {
       mapsUrl: string;
       bookingUrl: string;
     }) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.addClinic(
-          data.name,
-          data.address,
-          data.phone,
-          data.hours,
-          data.mapsUrl,
-          data.bookingUrl,
-        );
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "clinic");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.addClinic(
+        adminPassword,
+        data.name,
+        data.address,
+        data.phone,
+        data.hours,
+        data.mapsUrl,
+        data.bookingUrl,
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clinics"] });
@@ -128,7 +81,7 @@ export function useAdminAddClinic() {
 }
 
 export function useAdminUpdateClinic() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -141,21 +94,18 @@ export function useAdminUpdateClinic() {
       bookingUrl: string;
       isVisible: boolean;
     }) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.updateClinic(
-          data.id,
-          data.name,
-          data.address,
-          data.phone,
-          data.hours,
-          data.mapsUrl,
-          data.bookingUrl,
-          data.isVisible,
-        );
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "clinic");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.updateClinic(
+        adminPassword,
+        data.id,
+        data.name,
+        data.address,
+        data.phone,
+        data.hours,
+        data.mapsUrl,
+        data.bookingUrl,
+        data.isVisible,
+      );
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clinics"] });
@@ -165,16 +115,12 @@ export function useAdminUpdateClinic() {
 }
 
 export function useAdminDeleteClinic() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: bigint) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.deleteClinic(id);
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "clinic");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.deleteClinic(adminPassword, id);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["clinics"] });
@@ -186,7 +132,7 @@ export function useAdminDeleteClinic() {
 // ── Services ───────────────────────────────────────────
 
 export function useAdminAddService() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -194,23 +140,20 @@ export function useAdminAddService() {
       description: string;
       iconName: string;
     }) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.addService(
-          data.title,
-          data.description,
-          data.iconName,
-        );
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "service");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.addService(
+        adminPassword,
+        data.title,
+        data.description,
+        data.iconName,
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
   });
 }
 
 export function useAdminUpdateService() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -219,33 +162,26 @@ export function useAdminUpdateService() {
       description: string;
       iconName: string;
     }) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.updateService(
-          data.id,
-          data.title,
-          data.description,
-          data.iconName,
-        );
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "service");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.updateService(
+        adminPassword,
+        data.id,
+        data.title,
+        data.description,
+        data.iconName,
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
   });
 }
 
 export function useAdminDeleteService() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: bigint) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.deleteService(id);
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "service");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.deleteService(adminPassword, id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
   });
@@ -254,7 +190,7 @@ export function useAdminDeleteService() {
 // ── Social Links ───────────────────────────────────────
 
 export function useAdminAddSocialLink() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -262,23 +198,20 @@ export function useAdminAddSocialLink() {
       url: string;
       iconName: string;
     }) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.addSocialLink(
-          data.platform,
-          data.url,
-          data.iconName,
-        );
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "social link");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.addSocialLink(
+        adminPassword,
+        data.platform,
+        data.url,
+        data.iconName,
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["socialLinks"] }),
   });
 }
 
 export function useAdminUpdateSocialLink() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (data: {
@@ -287,33 +220,26 @@ export function useAdminUpdateSocialLink() {
       url: string;
       iconName: string;
     }) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.updateSocialLink(
-          data.id,
-          data.platform,
-          data.url,
-          data.iconName,
-        );
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "social link");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.updateSocialLink(
+        adminPassword,
+        data.id,
+        data.platform,
+        data.url,
+        data.iconName,
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["socialLinks"] }),
   });
 }
 
 export function useAdminDeleteSocialLink() {
-  const { actor, reinitialize } = useAdminActor();
+  const { actor, adminPassword } = useAdminActor();
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: bigint) => {
-      if (!actor) throw new Error("Not authenticated as admin");
-      try {
-        return await actor.deleteSocialLink(id);
-      } catch (err) {
-        return handleMutationError(err, reinitialize, "social link");
-      }
+      if (!actor) throw new Error("Not connected");
+      return await actor.deleteSocialLink(adminPassword, id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["socialLinks"] }),
   });

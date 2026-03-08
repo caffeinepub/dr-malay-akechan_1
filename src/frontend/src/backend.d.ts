@@ -55,15 +55,15 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
-    addClinic(name: string, address: string, phone: string, hours: string, mapsUrl: string, bookingUrl: string): Promise<bigint>;
-    addService(title: string, description: string, iconName: string): Promise<bigint>;
-    addSocialLink(platform: string, url: string, iconName: string): Promise<bigint>;
+    addClinic(adminSecret: string, name: string, address: string, phone: string, hours: string, mapsUrl: string, bookingUrl: string): Promise<bigint>;
+    addService(adminSecret: string, title: string, description: string, iconName: string): Promise<bigint>;
+    addSocialLink(adminSecret: string, platform: string, url: string, iconName: string): Promise<bigint>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    deleteClinic(id: bigint): Promise<boolean>;
-    deleteService(id: bigint): Promise<boolean>;
-    deleteSocialLink(id: bigint): Promise<boolean>;
+    deleteClinic(adminSecret: string, id: bigint): Promise<boolean>;
+    deleteService(adminSecret: string, id: bigint): Promise<boolean>;
+    deleteSocialLink(adminSecret: string, id: bigint): Promise<boolean>;
     getAbout(): Promise<AboutContent | null>;
-    getAllClinics(): Promise<Array<Clinic>>;
+    getAllClinics(adminSecret: string): Promise<Array<Clinic>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getClinics(): Promise<Array<Clinic>>;
@@ -74,10 +74,11 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    setAbout(about: AboutContent): Promise<void>;
-    setFooter(footer: FooterContent): Promise<void>;
-    setHeader(header: HeaderContent): Promise<void>;
-    updateClinic(id: bigint, name: string, address: string, phone: string, hours: string, mapsUrl: string, bookingUrl: string, isVisible: boolean): Promise<boolean>;
-    updateService(id: bigint, title: string, description: string, iconName: string): Promise<boolean>;
-    updateSocialLink(id: bigint, platform: string, url: string, iconName: string): Promise<boolean>;
+    setAbout(adminSecret: string, about: AboutContent): Promise<void>;
+    setFooter(adminSecret: string, footer: FooterContent): Promise<void>;
+    setHeader(adminSecret: string, header: HeaderContent): Promise<void>;
+    updateClinic(adminSecret: string, id: bigint, name: string, address: string, phone: string, hours: string, mapsUrl: string, bookingUrl: string, isVisible: boolean): Promise<boolean>;
+    updateService(adminSecret: string, id: bigint, title: string, description: string, iconName: string): Promise<boolean>;
+    updateSocialLink(adminSecret: string, id: bigint, platform: string, url: string, iconName: string): Promise<boolean>;
+    verifyAdminPassword(secret: string): Promise<boolean>;
 }

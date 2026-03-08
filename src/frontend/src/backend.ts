@@ -138,15 +138,15 @@ export enum UserRole {
 }
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
-    addClinic(name: string, address: string, phone: string, hours: string, mapsUrl: string, bookingUrl: string): Promise<bigint>;
-    addService(title: string, description: string, iconName: string): Promise<bigint>;
-    addSocialLink(platform: string, url: string, iconName: string): Promise<bigint>;
+    addClinic(adminSecret: string, name: string, address: string, phone: string, hours: string, mapsUrl: string, bookingUrl: string): Promise<bigint>;
+    addService(adminSecret: string, title: string, description: string, iconName: string): Promise<bigint>;
+    addSocialLink(adminSecret: string, platform: string, url: string, iconName: string): Promise<bigint>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    deleteClinic(id: bigint): Promise<boolean>;
-    deleteService(id: bigint): Promise<boolean>;
-    deleteSocialLink(id: bigint): Promise<boolean>;
+    deleteClinic(adminSecret: string, id: bigint): Promise<boolean>;
+    deleteService(adminSecret: string, id: bigint): Promise<boolean>;
+    deleteSocialLink(adminSecret: string, id: bigint): Promise<boolean>;
     getAbout(): Promise<AboutContent | null>;
-    getAllClinics(): Promise<Array<Clinic>>;
+    getAllClinics(adminSecret: string): Promise<Array<Clinic>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getClinics(): Promise<Array<Clinic>>;
@@ -157,12 +157,13 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    setAbout(about: AboutContent): Promise<void>;
-    setFooter(footer: FooterContent): Promise<void>;
-    setHeader(header: HeaderContent): Promise<void>;
-    updateClinic(id: bigint, name: string, address: string, phone: string, hours: string, mapsUrl: string, bookingUrl: string, isVisible: boolean): Promise<boolean>;
-    updateService(id: bigint, title: string, description: string, iconName: string): Promise<boolean>;
-    updateSocialLink(id: bigint, platform: string, url: string, iconName: string): Promise<boolean>;
+    setAbout(adminSecret: string, about: AboutContent): Promise<void>;
+    setFooter(adminSecret: string, footer: FooterContent): Promise<void>;
+    setHeader(adminSecret: string, header: HeaderContent): Promise<void>;
+    updateClinic(adminSecret: string, id: bigint, name: string, address: string, phone: string, hours: string, mapsUrl: string, bookingUrl: string, isVisible: boolean): Promise<boolean>;
+    updateService(adminSecret: string, id: bigint, title: string, description: string, iconName: string): Promise<boolean>;
+    updateSocialLink(adminSecret: string, id: bigint, platform: string, url: string, iconName: string): Promise<boolean>;
+    verifyAdminPassword(secret: string): Promise<boolean>;
 }
 import type { AboutContent as _AboutContent, FooterContent as _FooterContent, HeaderContent as _HeaderContent, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -181,45 +182,45 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async addClinic(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string): Promise<bigint> {
+    async addClinic(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.addClinic(arg0, arg1, arg2, arg3, arg4, arg5);
+                const result = await this.actor.addClinic(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.addClinic(arg0, arg1, arg2, arg3, arg4, arg5);
+            const result = await this.actor.addClinic(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
             return result;
         }
     }
-    async addService(arg0: string, arg1: string, arg2: string): Promise<bigint> {
+    async addService(arg0: string, arg1: string, arg2: string, arg3: string): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.addService(arg0, arg1, arg2);
+                const result = await this.actor.addService(arg0, arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.addService(arg0, arg1, arg2);
+            const result = await this.actor.addService(arg0, arg1, arg2, arg3);
             return result;
         }
     }
-    async addSocialLink(arg0: string, arg1: string, arg2: string): Promise<bigint> {
+    async addSocialLink(arg0: string, arg1: string, arg2: string, arg3: string): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.addSocialLink(arg0, arg1, arg2);
+                const result = await this.actor.addSocialLink(arg0, arg1, arg2, arg3);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.addSocialLink(arg0, arg1, arg2);
+            const result = await this.actor.addSocialLink(arg0, arg1, arg2, arg3);
             return result;
         }
     }
@@ -237,45 +238,45 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async deleteClinic(arg0: bigint): Promise<boolean> {
+    async deleteClinic(arg0: string, arg1: bigint): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.deleteClinic(arg0);
+                const result = await this.actor.deleteClinic(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.deleteClinic(arg0);
+            const result = await this.actor.deleteClinic(arg0, arg1);
             return result;
         }
     }
-    async deleteService(arg0: bigint): Promise<boolean> {
+    async deleteService(arg0: string, arg1: bigint): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.deleteService(arg0);
+                const result = await this.actor.deleteService(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.deleteService(arg0);
+            const result = await this.actor.deleteService(arg0, arg1);
             return result;
         }
     }
-    async deleteSocialLink(arg0: bigint): Promise<boolean> {
+    async deleteSocialLink(arg0: string, arg1: bigint): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.deleteSocialLink(arg0);
+                const result = await this.actor.deleteSocialLink(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.deleteSocialLink(arg0);
+            const result = await this.actor.deleteSocialLink(arg0, arg1);
             return result;
         }
     }
@@ -293,17 +294,17 @@ export class Backend implements backendInterface {
             return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getAllClinics(): Promise<Array<Clinic>> {
+    async getAllClinics(arg0: string): Promise<Array<Clinic>> {
         if (this.processError) {
             try {
-                const result = await this.actor.getAllClinics();
+                const result = await this.actor.getAllClinics(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.getAllClinics();
+            const result = await this.actor.getAllClinics(arg0);
             return result;
         }
     }
@@ -447,87 +448,101 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async setAbout(arg0: AboutContent): Promise<void> {
+    async setAbout(arg0: string, arg1: AboutContent): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.setAbout(arg0);
+                const result = await this.actor.setAbout(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.setAbout(arg0);
+            const result = await this.actor.setAbout(arg0, arg1);
             return result;
         }
     }
-    async setFooter(arg0: FooterContent): Promise<void> {
+    async setFooter(arg0: string, arg1: FooterContent): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.setFooter(arg0);
+                const result = await this.actor.setFooter(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.setFooter(arg0);
+            const result = await this.actor.setFooter(arg0, arg1);
             return result;
         }
     }
-    async setHeader(arg0: HeaderContent): Promise<void> {
+    async setHeader(arg0: string, arg1: HeaderContent): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.setHeader(arg0);
+                const result = await this.actor.setHeader(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.setHeader(arg0);
+            const result = await this.actor.setHeader(arg0, arg1);
             return result;
         }
     }
-    async updateClinic(arg0: bigint, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: boolean): Promise<boolean> {
+    async updateClinic(arg0: string, arg1: bigint, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: string, arg8: boolean): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateClinic(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+                const result = await this.actor.updateClinic(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateClinic(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+            const result = await this.actor.updateClinic(arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
             return result;
         }
     }
-    async updateService(arg0: bigint, arg1: string, arg2: string, arg3: string): Promise<boolean> {
+    async updateService(arg0: string, arg1: bigint, arg2: string, arg3: string, arg4: string): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateService(arg0, arg1, arg2, arg3);
+                const result = await this.actor.updateService(arg0, arg1, arg2, arg3, arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateService(arg0, arg1, arg2, arg3);
+            const result = await this.actor.updateService(arg0, arg1, arg2, arg3, arg4);
             return result;
         }
     }
-    async updateSocialLink(arg0: bigint, arg1: string, arg2: string, arg3: string): Promise<boolean> {
+    async updateSocialLink(arg0: string, arg1: bigint, arg2: string, arg3: string, arg4: string): Promise<boolean> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateSocialLink(arg0, arg1, arg2, arg3);
+                const result = await this.actor.updateSocialLink(arg0, arg1, arg2, arg3, arg4);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateSocialLink(arg0, arg1, arg2, arg3);
+            const result = await this.actor.updateSocialLink(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async verifyAdminPassword(arg0: string): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.verifyAdminPassword(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.verifyAdminPassword(arg0);
             return result;
         }
     }

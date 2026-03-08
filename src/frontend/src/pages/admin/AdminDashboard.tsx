@@ -11,6 +11,7 @@ import {
   Share2,
   Stethoscope,
 } from "lucide-react";
+
 import { motion } from "motion/react";
 import { useState } from "react";
 import AdminAboutTab from "./tabs/AdminAboutTab";
@@ -35,7 +36,7 @@ const tabItems = [
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState("header");
-  const { isFetching } = useAdminActor();
+  const { isReady } = useAdminActor();
 
   return (
     <div className="relative min-h-[calc(100vh-4rem)] overflow-hidden">
@@ -60,7 +61,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
                 Manage all website content from here
               </p>
             </div>
-            {isFetching && (
+            {!isReady && (
               <Loader2
                 size={16}
                 className="text-cyan animate-spin flex-shrink-0 mt-1"

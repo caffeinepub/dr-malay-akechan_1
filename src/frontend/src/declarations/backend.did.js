@@ -57,18 +57,26 @@ export const SocialLink = IDL.Record({
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addClinic' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Nat],
       [],
     ),
-  'addService' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
-  'addSocialLink' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+  'addService' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
+  'addSocialLink' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Nat],
+      [],
+    ),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'deleteClinic' : IDL.Func([IDL.Nat], [IDL.Bool], []),
-  'deleteService' : IDL.Func([IDL.Nat], [IDL.Bool], []),
-  'deleteSocialLink' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+  'deleteClinic' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+  'deleteService' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+  'deleteSocialLink' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
   'getAbout' : IDL.Func([], [IDL.Opt(AboutContent)], ['query']),
-  'getAllClinics' : IDL.Func([], [IDL.Vec(Clinic)], ['query']),
+  'getAllClinics' : IDL.Func([IDL.Text], [IDL.Vec(Clinic)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getClinics' : IDL.Func([], [IDL.Vec(Clinic)], ['query']),
@@ -83,11 +91,12 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-  'setAbout' : IDL.Func([AboutContent], [], []),
-  'setFooter' : IDL.Func([FooterContent], [], []),
-  'setHeader' : IDL.Func([HeaderContent], [], []),
+  'setAbout' : IDL.Func([IDL.Text, AboutContent], [], []),
+  'setFooter' : IDL.Func([IDL.Text, FooterContent], [], []),
+  'setHeader' : IDL.Func([IDL.Text, HeaderContent], [], []),
   'updateClinic' : IDL.Func(
       [
+        IDL.Text,
         IDL.Nat,
         IDL.Text,
         IDL.Text,
@@ -101,15 +110,16 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateService' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Bool],
       [],
     ),
   'updateSocialLink' : IDL.Func(
-      [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
+      [IDL.Text, IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
       [IDL.Bool],
       [],
     ),
+  'verifyAdminPassword' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
 });
 
 export const idlInitArgs = [];
@@ -164,18 +174,26 @@ export const idlFactory = ({ IDL }) => {
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addClinic' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Nat],
         [],
       ),
-    'addService' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
-    'addSocialLink' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [IDL.Nat], []),
+    'addService' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
+    'addSocialLink' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Nat],
+        [],
+      ),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'deleteClinic' : IDL.Func([IDL.Nat], [IDL.Bool], []),
-    'deleteService' : IDL.Func([IDL.Nat], [IDL.Bool], []),
-    'deleteSocialLink' : IDL.Func([IDL.Nat], [IDL.Bool], []),
+    'deleteClinic' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+    'deleteService' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
+    'deleteSocialLink' : IDL.Func([IDL.Text, IDL.Nat], [IDL.Bool], []),
     'getAbout' : IDL.Func([], [IDL.Opt(AboutContent)], ['query']),
-    'getAllClinics' : IDL.Func([], [IDL.Vec(Clinic)], ['query']),
+    'getAllClinics' : IDL.Func([IDL.Text], [IDL.Vec(Clinic)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getClinics' : IDL.Func([], [IDL.Vec(Clinic)], ['query']),
@@ -190,11 +208,12 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
-    'setAbout' : IDL.Func([AboutContent], [], []),
-    'setFooter' : IDL.Func([FooterContent], [], []),
-    'setHeader' : IDL.Func([HeaderContent], [], []),
+    'setAbout' : IDL.Func([IDL.Text, AboutContent], [], []),
+    'setFooter' : IDL.Func([IDL.Text, FooterContent], [], []),
+    'setHeader' : IDL.Func([IDL.Text, HeaderContent], [], []),
     'updateClinic' : IDL.Func(
         [
+          IDL.Text,
           IDL.Nat,
           IDL.Text,
           IDL.Text,
@@ -208,15 +227,16 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateService' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Bool],
         [],
       ),
     'updateSocialLink' : IDL.Func(
-        [IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
+        [IDL.Text, IDL.Nat, IDL.Text, IDL.Text, IDL.Text],
         [IDL.Bool],
         [],
       ),
+    'verifyAdminPassword' : IDL.Func([IDL.Text], [IDL.Bool], ['query']),
   });
 };
 

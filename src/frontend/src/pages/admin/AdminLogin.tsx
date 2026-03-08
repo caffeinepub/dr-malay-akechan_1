@@ -26,6 +26,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
     await new Promise((r) => setTimeout(r, 400));
 
     if (username === "malay" && password === "duke46") {
+      sessionStorage.setItem("adminPassword", "duke46");
       onLogin();
     } else {
       setError("Invalid credentials. Please try again.");

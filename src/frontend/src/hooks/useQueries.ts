@@ -49,11 +49,15 @@ export function useGetClinics() {
 
 export function useGetAllClinics() {
   const { actor, isFetching } = useActor();
+  const adminPassword =
+    typeof window !== "undefined"
+      ? (sessionStorage.getItem("adminPassword") ?? "")
+      : "";
   return useQuery<Clinic[]>({
     queryKey: ["allClinics"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllClinics();
+      return actor.getAllClinics(adminPassword);
     },
     enabled: !!actor && !isFetching,
   });
@@ -95,7 +99,15 @@ export function useGetFooter() {
   });
 }
 
-// ── Admin mutations ───────────────────────────────────
+// ── Admin mutations (legacy — use useAdminQueries.ts for admin panel) ─────────
+// These are kept for any public-facing usage but are effectively no-ops without
+// a valid adminPassword. The admin panel uses useAdminQueries.ts instead.
+
+function getAdminPassword(): string {
+  return typeof window !== "undefined"
+    ? (sessionStorage.getItem("adminPassword") ?? "")
+    : "";
+}
 
 export function useSetHeader() {
   const { actor } = useActor();
@@ -103,7 +115,7 @@ export function useSetHeader() {
   return useMutation({
     mutationFn: async (header: HeaderContent) => {
       if (!actor) throw new Error("No actor");
-      return actor.setHeader(header);
+      return actor.setHeader(getAdminPassword(), header);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["header"] }),
   });
@@ -115,7 +127,7 @@ export function useSetAbout() {
   return useMutation({
     mutationFn: async (about: AboutContent) => {
       if (!actor) throw new Error("No actor");
-      return actor.setAbout(about);
+      return actor.setAbout(getAdminPassword(), about);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["about"] }),
   });
@@ -127,7 +139,7 @@ export function useSetFooter() {
   return useMutation({
     mutationFn: async (footer: FooterContent) => {
       if (!actor) throw new Error("No actor");
-      return actor.setFooter(footer);
+      return actor.setFooter(getAdminPassword(), footer);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["footer"] }),
   });
@@ -147,6 +159,7 @@ export function useAddClinic() {
     }) => {
       if (!actor) throw new Error("No actor");
       return actor.addClinic(
+        getAdminPassword(),
         data.name,
         data.address,
         data.phone,
@@ -175,6 +188,7 @@ export function useUpdateClinic() {
     }) => {
       if (!actor) throw new Error("No actor");
       return actor.updateClinic(
+        getAdminPassword(),
         data.id,
         data.name,
         data.address,
@@ -195,7 +209,7 @@ export function useDeleteClinic() {
   return useMutation({
     mutationFn: async (id: bigint) => {
       if (!actor) throw new Error("No actor");
-      return actor.deleteClinic(id);
+      return actor.deleteClinic(getAdminPassword(), id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["clinics"] }),
   });
@@ -211,7 +225,12 @@ export function useAddService() {
       iconName: string;
     }) => {
       if (!actor) throw new Error("No actor");
-      return actor.addService(data.title, data.description, data.iconName);
+      return actor.addService(
+        getAdminPassword(),
+        data.title,
+        data.description,
+        data.iconName,
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
   });
@@ -229,6 +248,7 @@ export function useUpdateService() {
     }) => {
       if (!actor) throw new Error("No actor");
       return actor.updateService(
+        getAdminPassword(),
         data.id,
         data.title,
         data.description,
@@ -245,7 +265,7 @@ export function useDeleteService() {
   return useMutation({
     mutationFn: async (id: bigint) => {
       if (!actor) throw new Error("No actor");
-      return actor.deleteService(id);
+      return actor.deleteService(getAdminPassword(), id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["services"] }),
   });
@@ -261,7 +281,12 @@ export function useAddSocialLink() {
       iconName: string;
     }) => {
       if (!actor) throw new Error("No actor");
-      return actor.addSocialLink(data.platform, data.url, data.iconName);
+      return actor.addSocialLink(
+        getAdminPassword(),
+        data.platform,
+        data.url,
+        data.iconName,
+      );
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["socialLinks"] }),
   });
@@ -279,6 +304,7 @@ export function useUpdateSocialLink() {
     }) => {
       if (!actor) throw new Error("No actor");
       return actor.updateSocialLink(
+        getAdminPassword(),
         data.id,
         data.platform,
         data.url,
@@ -295,7 +321,7 @@ export function useDeleteSocialLink() {
   return useMutation({
     mutationFn: async (id: bigint) => {
       if (!actor) throw new Error("No actor");
-      return actor.deleteSocialLink(id);
+      return actor.deleteSocialLink(getAdminPassword(), id);
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["socialLinks"] }),
   });

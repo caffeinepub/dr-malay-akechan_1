@@ -56,17 +56,17 @@ export type UserRole = { 'admin' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addClinic' : ActorMethod<
-    [string, string, string, string, string, string],
+    [string, string, string, string, string, string, string],
     bigint
   >,
-  'addService' : ActorMethod<[string, string, string], bigint>,
-  'addSocialLink' : ActorMethod<[string, string, string], bigint>,
+  'addService' : ActorMethod<[string, string, string, string], bigint>,
+  'addSocialLink' : ActorMethod<[string, string, string, string], bigint>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'deleteClinic' : ActorMethod<[bigint], boolean>,
-  'deleteService' : ActorMethod<[bigint], boolean>,
-  'deleteSocialLink' : ActorMethod<[bigint], boolean>,
+  'deleteClinic' : ActorMethod<[string, bigint], boolean>,
+  'deleteService' : ActorMethod<[string, bigint], boolean>,
+  'deleteSocialLink' : ActorMethod<[string, bigint], boolean>,
   'getAbout' : ActorMethod<[], [] | [AboutContent]>,
-  'getAllClinics' : ActorMethod<[], Array<Clinic>>,
+  'getAllClinics' : ActorMethod<[string], Array<Clinic>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getClinics' : ActorMethod<[], Array<Clinic>>,
@@ -77,15 +77,22 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'setAbout' : ActorMethod<[AboutContent], undefined>,
-  'setFooter' : ActorMethod<[FooterContent], undefined>,
-  'setHeader' : ActorMethod<[HeaderContent], undefined>,
+  'setAbout' : ActorMethod<[string, AboutContent], undefined>,
+  'setFooter' : ActorMethod<[string, FooterContent], undefined>,
+  'setHeader' : ActorMethod<[string, HeaderContent], undefined>,
   'updateClinic' : ActorMethod<
-    [bigint, string, string, string, string, string, string, boolean],
+    [string, bigint, string, string, string, string, string, string, boolean],
     boolean
   >,
-  'updateService' : ActorMethod<[bigint, string, string, string], boolean>,
-  'updateSocialLink' : ActorMethod<[bigint, string, string, string], boolean>,
+  'updateService' : ActorMethod<
+    [string, bigint, string, string, string],
+    boolean
+  >,
+  'updateSocialLink' : ActorMethod<
+    [string, bigint, string, string, string],
+    boolean
+  >,
+  'verifyAdminPassword' : ActorMethod<[string], boolean>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

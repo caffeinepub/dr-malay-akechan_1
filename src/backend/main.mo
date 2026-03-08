@@ -3,28 +3,16 @@ import Nat "mo:core/Nat";
 import Iter "mo:core/Iter";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-
+// Apply migration after upgrade
+(with migration = Migration.run)
 actor {
-  // State Declarations
-  let clinics = Map.empty<Nat, Clinic>();
-  let services = Map.empty<Nat, Service>();
-  let socialLinks = Map.empty<Nat, SocialLink>();
-  let userProfiles = Map.empty<Principal, UserProfile>();
-
-  var headerContent : ?HeaderContent = null;
-  var aboutContent : ?AboutContent = null;
-  var footerContent : ?FooterContent = null;
-  var nextClinicId = 1;
-  var nextServiceId = 1;
-  var nextSocialLinkId = 1;
-
-  // Access Control Integration
-  let accessControlState = AccessControl.initState();
-  include MixinAuthorization(accessControlState);
+  // Constants
+  let ADMIN_PASSWORD : Text = "duke46";
 
   // Persistent Types
   public type HeaderContent = {
@@ -76,7 +64,37 @@ actor {
     name : Text;
   };
 
-  // Data Queries
+  // State Declarations
+  let clinics = Map.empty<Nat, Clinic>();
+  let services = Map.empty<Nat, Service>();
+  let socialLinks = Map.empty<Nat, SocialLink>();
+  let userProfiles = Map.empty<Principal, UserProfile>();
+
+  var headerContent : ?HeaderContent = null;
+  var aboutContent : ?AboutContent = null;
+  var footerContent : ?FooterContent = null;
+  var nextClinicId = 1;
+  var nextServiceId = 1;
+  var nextSocialLinkId = 1;
+
+  // Access Control Integration (needed for Caffeine compatibility)
+  let accessControlState = AccessControl.initState();
+  include MixinAuthorization(accessControlState);
+
+  // ==================
+  // Helper Functions
+  // ==================
+
+  func requireAdmin(secret : Text) {
+    if (secret != ADMIN_PASSWORD) {
+      Runtime.trap("Unauthorized: Invalid admin password");
+    };
+  };
+
+  // ==================
+  // Public Queries (No Auth)
+  // ==================
+
   public query func getHeader() : async ?HeaderContent {
     headerContent;
   };
@@ -91,10 +109,6 @@ actor {
     visible;
   };
 
-  public query func getAllClinics() : async [Clinic] {
-    clinics.values().toArray();
-  };
-
   public query func getServices() : async [Service] {
     services.values().toArray();
   };
@@ -107,31 +121,40 @@ actor {
     footerContent;
   };
 
-  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    getUserProfileInternal(caller, caller);
+  public query func verifyAdminPassword(secret : Text) : async Bool {
+    secret == ADMIN_PASSWORD;
   };
 
-  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    getUserProfileInternal(caller, user);
+  // ==================
+  // Admin Query Functions
+  // ==================
+
+  public query func getAllClinics(adminSecret : Text) : async [Clinic] {
+    requireAdmin(adminSecret);
+    clinics.values().toArray();
   };
 
-  // Admin Functions
-  public shared ({ caller }) func setHeader(header : HeaderContent) : async () {
-    adminOnly(caller);
+  // ===============
+  // Admin Functions (All require adminSecret as FIRST param)
+  // ===============
+
+  public shared ({ caller }) func setHeader(adminSecret : Text, header : HeaderContent) : async () {
+    requireAdmin(adminSecret);
     headerContent := ?header;
   };
 
-  public shared ({ caller }) func setAbout(about : AboutContent) : async () {
-    adminOnly(caller);
+  public shared ({ caller }) func setAbout(adminSecret : Text, about : AboutContent) : async () {
+    requireAdmin(adminSecret);
     aboutContent := ?about;
   };
 
-  public shared ({ caller }) func setFooter(footer : FooterContent) : async () {
-    adminOnly(caller);
+  public shared ({ caller }) func setFooter(adminSecret : Text, footer : FooterContent) : async () {
+    requireAdmin(adminSecret);
     footerContent := ?footer;
   };
 
   public shared ({ caller }) func addClinic(
+    adminSecret : Text,
     name : Text,
     address : Text,
     phone : Text,
@@ -139,7 +162,7 @@ actor {
     mapsUrl : Text,
     bookingUrl : Text,
   ) : async Nat {
-    adminOnly(caller);
+    requireAdmin(adminSecret);
     let id = nextClinicId;
     let clinic : Clinic = {
       id;
@@ -157,6 +180,7 @@ actor {
   };
 
   public shared ({ caller }) func updateClinic(
+    adminSecret : Text,
     id : Nat,
     name : Text,
     address : Text,
@@ -166,42 +190,45 @@ actor {
     bookingUrl : Text,
     isVisible : Bool,
   ) : async Bool {
-    adminOnly(caller);
+    requireAdmin(adminSecret);
     switch (clinics.get(id)) {
       case (null) { false };
       case (_) {
-        clinics.add(id, {
-          id;
-          name;
-          address;
-          phone;
-          hours;
-          mapsUrl;
-          bookingUrl;
-          isVisible;
-        });
+        clinics.add(
+          id,
+          {
+            id;
+            name;
+            address;
+            phone;
+            hours;
+            mapsUrl;
+            bookingUrl;
+            isVisible;
+          },
+        );
         true;
       };
     };
   };
 
-  public shared ({ caller }) func deleteClinic(id : Nat) : async Bool {
-    adminOnly(caller);
+  public shared ({ caller }) func deleteClinic(adminSecret : Text, id : Nat) : async Bool {
+    requireAdmin(adminSecret);
     let existed = clinics.containsKey(id);
     clinics.remove(id);
     existed;
   };
 
-  public shared ({ caller }) func addService(title : Text, description : Text, iconName : Text) : async Nat {
-    adminOnly(caller);
+  public shared ({ caller }) func addService(adminSecret : Text, title : Text, description : Text, iconName : Text) : async Nat {
+    requireAdmin(adminSecret);
     let id = nextServiceId;
     services.add(id, { id; title; description; iconName });
     nextServiceId += 1;
     id;
   };
 
-  public shared ({ caller }) func updateService(id : Nat, title : Text, description : Text, iconName : Text) : async Bool {
-    adminOnly(caller);
+  public shared ({ caller }) func updateService(adminSecret : Text, id : Nat, title : Text, description : Text, iconName : Text) : async Bool {
+    requireAdmin(adminSecret);
     switch (services.get(id)) {
       case (null) { false };
       case (_) {
@@ -211,23 +238,23 @@ actor {
     };
   };
 
-  public shared ({ caller }) func deleteService(id : Nat) : async Bool {
-    adminOnly(caller);
+  public shared ({ caller }) func deleteService(adminSecret : Text, id : Nat) : async Bool {
+    requireAdmin(adminSecret);
     let existed = services.containsKey(id);
     services.remove(id);
     existed;
   };
 
-  public shared ({ caller }) func addSocialLink(platform : Text, url : Text, iconName : Text) : async Nat {
-    adminOnly(caller);
+  public shared ({ caller }) func addSocialLink(adminSecret : Text, platform : Text, url : Text, iconName : Text) : async Nat {
+    requireAdmin(adminSecret);
     let id = nextSocialLinkId;
     socialLinks.add(id, { id; platform; url; iconName });
     nextSocialLinkId += 1;
     id;
   };
 
-  public shared ({ caller }) func updateSocialLink(id : Nat, platform : Text, url : Text, iconName : Text) : async Bool {
-    adminOnly(caller);
+  public shared ({ caller }) func updateSocialLink(adminSecret : Text, id : Nat, platform : Text, url : Text, iconName : Text) : async Bool {
+    requireAdmin(adminSecret);
     switch (socialLinks.get(id)) {
       case (null) { false };
       case (_) {
@@ -237,20 +264,33 @@ actor {
     };
   };
 
-  public shared ({ caller }) func deleteSocialLink(id : Nat) : async Bool {
-    adminOnly(caller);
+  public shared ({ caller }) func deleteSocialLink(adminSecret : Text, id : Nat) : async Bool {
+    requireAdmin(adminSecret);
     let existed = socialLinks.containsKey(id);
     socialLinks.remove(id);
     existed;
   };
 
-  // User-specific Functions
+  // ==================
+  // User-specific Functions (keep for Caffeine)
+  // ==================
+
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    getUserProfileInternal(caller, caller);
+  };
+
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    getUserProfileInternal(caller, user);
+  };
+
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
     userOnly(caller);
     userProfiles.add(caller, profile);
   };
 
-  // Internal Checks
+  // ==================
+  // Internal Checks (keep for Caffeine)
+  // ==================
   func adminOnly(caller : Principal) {
     if (not AccessControl.hasPermission(accessControlState, caller, #admin)) {
       Runtime.trap("Unauthorized: Only admins can perform this action");
@@ -269,8 +309,4 @@ actor {
     };
     userProfiles.get(user);
   };
-
-  // TODO for future work:
-  // - Implement additional features such as file upload support (for PDFs/images) if needed.
 };
-
